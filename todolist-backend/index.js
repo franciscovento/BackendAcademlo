@@ -1,5 +1,5 @@
 const { request, response } = require('express');
-const {getAllTasks, deleteTask, writeTasks} = require('./services')
+const {getAllTasks, deleteTask, addTask, updateTask} = require('./services')
 const express = require('express');
 const app = express();
 
@@ -39,7 +39,6 @@ app.delete('/api/tasks/:id', (request, response) => {
 
 app.post('/api/tasks', async (request, response) => {
     try {
-        let allTasks = await getAllTasks();
         const task = request.body
     
     if (!task || !task.content) {
@@ -48,25 +47,29 @@ app.post('/api/tasks', async (request, response) => {
         })
     }
     
-        const date = Date.now();
-        const ids = allTasks.map(x => x.id);
-        const maxId = Math.max(...ids);
-    
-        const newTask = {
-            id: maxId + 1,
-            content: task.content,
-            date: new Date(date).toDateString(),
-            completed: false
-        }
-    
-        allTasks = [...allTasks, newTask];
-        writeTasks(allTasks);
+        const newTask = await addTask(task.content);
         response.status(201).json(newTask);
         
     } catch (error) {
         console.log(error)
     }
 })
+
+app.put('/api/tasks/:id', async (request, response) => {
+   try {
+       
+    const id = Number(request.params.id);
+    const task = request.body
+
+    const taskUpdated = await updateTask(id, task);
+    response.status(202).json(taskUpdated);
+
+   } catch (error) {
+       console.log(error)
+   }
+})
+
+
 
 const PORT = 8000;
 app.listen(PORT, () => {
